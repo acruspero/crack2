@@ -14,24 +14,35 @@ const int HASH_LEN = 33;        // Length of MD5 hash strings
 char * tryWord(char * plaintext, char * hashFilename)
 {
     // Hash the plaintext
+    char *hashPlaintext = md5(plaintext, strlen(plaintext));
 
     // Open the hash file
+    FILE *src = fopen(hashFilename, "r");
 
     // Loop through the hash file, one line at a time.
+    char line[HASH_LEN];
 
-    // Attempt to match the hash from the file to the
-    // hash of the plaintext.
+    while (fgets(line, HASH_LEN, src) != NULL)
+    {
+        // trim newline
+        char *nl = strrchr(line, '\n');
+        if (nl != NULL) *nl = '\0';
+            
+        // Attempt to match the hash from the file to the
+        // hash of the plaintext.
 
-    // If there is a match, you'll return the hash.
-    // If not, return NULL.
+        // return hash if it was found
+        if (strcmp(line, hashPlaintext) == 0)
+        {
+            fclose(src);
+            return hashPlaintext;
+        }
+    }        
 
-    // Before returning, do any needed cleanup:
-    //   Close files?
-    //   Free memory?
-
-    // Modify this line so it returns the hash
-    // that was found, or NULL if not found.
-    return "0123456789abcdef0123456789abcdef";
+    // Before returning, cleanup
+    fclose(src);
+    free(hashPlaintext);
+    return NULL;
 }
 
 
@@ -48,23 +59,37 @@ int main(int argc, char *argv[])
     // which is 5d41402abc4b2a76b9719d911017c592.
     // Then you can remove these two lines and complete the rest
     // of the main function below.
-    char *found = tryWord("hello", "hashes00.txt");
-    printf("%s %s\n", found, "hello");
-
 
     // Open the dictionary file for reading.
-    
+    FILE *dict = fopen(argv[2], "r");
 
     // For each dictionary word, pass it to tryWord, which
     // will attempt to match it against the hashes in the hash_file.
-    
-    // If we got a match, display the hash and the word. For example:
-    //   5d41402abc4b2a76b9719d911017c592 hello
+    char line[HASH_LEN];
+    int count = 0;
+    while (fgets(line, HASH_LEN, dict) != NULL)
+    {
+        // trim newline
+        char *nl = strrchr(line, '\n');
+        if (nl != NULL) *nl = '\0';
+
+        // pass in hash and dictionary
+        char *match = tryWord(line, argv[1]);
+
+        // If there's a match, display the hash and the word.
+        if (match)
+        {
+            // Ex: 5d41402abc4b2a76b9719d911017c592 hello
+            printf("%s %s\n", line, match);
+            count++;
+        }
+        free(match);
+    }
     
     // Close the dictionary file.
+    fclose(dict);
 
     // Display the number of hashes that were cracked.
-    
-    // Free up any malloc'd memory?
+    printf("%d hashes cracked!\n", count); 
 }
 
